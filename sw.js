@@ -1,4 +1,4 @@
-const CACHE_NAME = "compteur-flemmard-v5";
+const CACHE_NAME = "compteur-flemmard-v6";
 const ASSETS = [
   "./",
   "./index.html",
@@ -32,10 +32,20 @@ self.addEventListener("fetch", event => {
         .catch(() => caches.match(event.request))
         .then(response => response.text())
         .then(html => {
-          const fixed = html.replace(
+          let fixed = html.replace(
             "input.oninput=()=>{state.players[i]=input.value.trim()||`Joueur ${i+1}`;render()}",
             "input.oninput=()=>{state.players[i]=input.value.trim()||`Joueur ${i+1}`;renderSelectors();renderRoundScores();renderStatus();renderTotals();renderRecap();renderHistory();save()}"
           );
+          const compactToolbar = '<div class="toolbar"><button id="exportJson">Exporter</button><button id="exportCsv">CSV</button><button id="importButton">Importer</button><button id="resetGame" class="danger">Reset</button><input id="importFile" class="file" type="file" accept="application/json"></div>';
+          const expandedToolbar = '<div class="toolbar">\n        <button id="exportJson" type="button">Exporter</button>\n        <button id="exportCsv" type="button">CSV</button>\n        <button id="importButton" type="button">Importer</button>\n        <button id="resetGame" class="danger" type="button">Reset</button>\n        <input id="importFile" class="file-input" type="file" accept="application/json">\n      </div>';
+          const compactBackup = '<div class="group"><h2>Sauvegarde</h2><div class="buttons"><button id="exportJson">Exporter</button><button id="exportCsv">CSV</button><button id="importButton">Importer</button><button id="resetGame" class="danger">Reset</button><input id="importFile" class="file" type="file" accept="application/json"></div></div>';
+          fixed = fixed.replace(compactToolbar, "").replace(expandedToolbar, "");
+          if (!fixed.includes("<h2>Sauvegarde</h2>")) {
+            fixed = fixed.replace(
+              '<p class="hint">Le total peut être simple, comme 80, ou composé, comme -100 // -50.</p></div></div></details>',
+              '<p class="hint">Le total peut être simple, comme 80, ou composé, comme -100 // -50.</p></div>' + compactBackup + '</div></details>'
+            );
+          }
           return new Response(fixed, {
             headers: { "Content-Type": "text/html; charset=utf-8" }
           });
